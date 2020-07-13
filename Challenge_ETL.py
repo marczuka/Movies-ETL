@@ -61,7 +61,6 @@ def ETL_function(Wiki_file, Kaggle_metafile, Rating_file):
         # After looping through all the keys - add the list of alt titles to the movie
         if len(alt_titles) > 0:
             movie['Alt titles'] = dict(alt_titles)
-            print(f"The following alt titles were found: {alt_titles}")
         
         # Defining a function to consolidate columns with the same data into one column
         def change_column_name(old_name, new_name):
@@ -349,10 +348,22 @@ def ETL_function(Wiki_file, Kaggle_metafile, Rating_file):
     engine = create_engine(db_string)
 
     try:
+        engine.execute("DELETE FROM movies;")
+    except Exception as e:
+        print("The following exception occured while trying to remove data from SQL movies table:")
+        print(e)
+
+    try:
         # Loading movies data DataFrame to PostgreSQL
         movies_df.to_sql(name='movies', con=engine, if_exists="append")
     except Exception as e:
-        print(f"The following exception occured while trying to load movie data to SQL:")
+        print("The following exception occured while trying to load movie data to SQL:")
+        print(e)
+
+    try:
+        engine.execute("DELETE FROM ratings;")
+    except Exception as e:
+        print("The following exception occured while trying to remove data from SQL ratings table:")
         print(e)
 
     # Loading ratings data to PostgreSQL in chunks
@@ -376,5 +387,6 @@ kaggle_file_1 = os.path.join("Resources/", "movies_metadata.csv")
 kaggle_file_2 = os.path.join("Resources/", "ratings.csv")
 
 ETL_function(JSON_file, kaggle_file_1, kaggle_file_2)
+print("--- ETL process finished successfully! ---")
 
 
